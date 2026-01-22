@@ -1,9 +1,12 @@
+import threading
+
 from src.config import DATA_DIR
 from src.models.cart import AddToCart, Handover, ShowCart
 from src.models.wine_search import SearchWinePriceList
 from src.services.vector_store import setup_vector_store
 from src.agent.wine_agent import Agent
 from src.bot.telegram_bot import run_telegram_bot
+from src.web_ui.admin import run_admin_panel
 
 instruction = """
 Ты - опытный сомелье, продающий вино в магазине. Твоя задача - отвечать на вопросы пользователя
@@ -17,8 +20,10 @@ instruction = """
 Для передачи управления оператору - вызови фукцию Handover. Для добавления вина в корзину
 используй AddToCart. Если пользователь просит показать, посмотреть, отобразить, рассказать о содержимом корзины — обязательно вызови функцию ShowCart. Никогда не отвечай на такие вопросы без вызова этой функции. Все названия вин, цветов, кислотности
 пиши на русском языке.
+После ЛЮБОГО действия (поиск, добавление в корзину, передача оператору) ты ОБЯЗАН отправить пользователю чёткий, дружелюбный и завершённый ответ. НИКОГДА не отправляй пустое сообщение.
 Если что-то непонятно, то лучше уточни информацию у пользователя. Общайся достаточно короткими 
 разговорными фразами, не используй перечисления, списки, длинные выдержки текста.
+Если результат действия очевиден (например, вино добавлено), кратко подтверди это и предложи следующий шаг.
 """
 
 if __name__ == "__main__":
@@ -57,5 +62,12 @@ if __name__ == "__main__":
         ],
         tool_choice='auto'
     )
+
+    admin_thread = threading.Thread(
+        target=run_admin_panel,
+        args=(wine_agent,),
+        daemon=True
+    )
+    admin_thread.start()
 
     run_telegram_bot(wine_agent)

@@ -6,10 +6,15 @@ class AddToCart(BaseModel):
     wine_name: str = Field(default=None)
     count: int = Field(default=1)
 
+    # src/models/cart.py
+
     def process(self, session_id):
         if session_id not in carts:
             carts[session_id] = []
-        carts[session_id].append(self)
+        carts[session_id].append({
+            "wine_name": self.wine_name,
+            "count": self.count
+        })
         print(f"[DEBUG] Добавлено в корзину для {session_id}: {self.wine_name} (всего: {len(carts[session_id])})")
         return f"Вино {self.wine_name} добавлено в корзину, число бутылок: {self.count}"
 
